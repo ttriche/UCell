@@ -125,23 +125,11 @@ rankings2Uscore <- function(ranks_matrix, features, chunk.size=1000, w_neg=1,
 #    plan(future::multisession(workers=ncores))
     
 
-    meta.list <- parallel::mclapply(mc.cores = ncores,
+    clust <- makeCluster(ncores) #This line will take time 
+    meta.list <- parallel::parLapply(cl = clust,
+                                     
       X = split.data,
-      FUN = function(x) {
-
-        dense <- as.matrix(x)
-        dense <- as.data.table(dense, keep.rownames=TRUE)
-        setkey(dense, rn, physical=F)
-
-        cells_AUC <- u_stat_signature_list(features, dense, maxRank=maxRank, sparse=T, w_neg=w_neg)
-        colnames(cells_AUC) <- paste0(colnames(cells_AUC),name)
-        
-        if (force.gc) {
-          dense <- NULL
-          gc()
-        }
-        return(list(cells_AUC=cells_AUC))
-      },
+      FUN = aux_lapply_function(x,w_neg= w_neg, maxRank = maxRank,force.gc = force.gc, name = name),
       future.seed = seed
     )
 
@@ -187,36 +175,10 @@ calculate_Uscore <- function(matrix, features,  maxRank=1500, chunk.size=1000, n
   #Parallelize?
   if (ncores>1) {
     #plan(future::multisession(workers=ncores))
-    meta.list <- parallel::mclapply(mc.cores = ncores,
+    clust <- makeCluster(ncores) #This line will take time 
+    meta.list <- parallel::parLapply(cl = clust,
       X = split.data,
-      FUN = function(x) {
-
-        cells_rankings <- data_to_ranks_data_table(x, ties.method = ties.method)
-        cells_AUC <- u_stat_signature_list(features, cells_rankings, maxRank=maxRank, sparse=F, w_neg=w_neg)
-
-        colnames(cells_AUC) <- paste0(colnames(cells_AUC),name)
-
-        if (storeRanks==T){
-          gene.names <- as.character(as.matrix(cells_rankings[,1]))
-          #make sparse
-          cells_rankings[cells_rankings>maxRank] <- 0
-          ranks.sparse <- Matrix::Matrix(as.matrix(cells_rankings[,-1]),sparse = T)
-          dimnames(ranks.sparse)[[1]] <- gene.names
-          
-          if (force.gc) {
-             cells_rankings <- NULL
-             gc()
-          }
-          return(list(cells_rankings=ranks.sparse, cells_AUC=cells_AUC))
-
-        } else {
-          if (force.gc) {
-            cells_rankings <- NULL
-            gc()
-          }
-          return(list(cells_AUC=cells_AUC))
-        }
-      },
+      FUN = aux_lapply_function(x,w_neg= w_neg,maxRank = maxRank,force.gc = force.gc ,name = name),
       future.seed = seed
     )
 
@@ -251,4 +213,21 @@ calculate_Uscore <- function(matrix, features,  maxRank=1500, chunk.size=1000, n
       } )
   }
   return(meta.list)
+}
+
+
+aux_lapply_function <-  function(x,w_neg,maxRank,force.gc,name) {
+  
+  dense <- as.matrix(x)
+  dense <- as.data.table(dense, keep.rownames=TRUE)
+  setkey(dense, rn, physical=F)
+  
+  cells_AUC <- u_stat_signature_list(features, dense, maxRank=maxRank, sparse=T, w_neg=w_neg)
+  colnames(cells_AUC) <- paste0(colnames(cells_AUC),name)
+  
+  if (force.gc) {
+    dense <- NULL
+    gc()
+  }
+  return(list(cells_AUC=cells_AUC))
 }
