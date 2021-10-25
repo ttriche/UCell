@@ -122,11 +122,10 @@ rankings2Uscore <- function(ranks_matrix, features, chunk.size=1000, w_neg=1,
   rm(ranks_matrix)
 
   if (ncores>1) {
-    clust <- makeCluster(ncores)
 #    plan(future::multisession(workers=ncores))
     
 
-    meta.list <- parallel::parLapply(cl = clust,
+    meta.list <- parallel::mclapply(mc.cores = ncores,
       X = split.data,
       FUN = function(x) {
 
@@ -188,8 +187,7 @@ calculate_Uscore <- function(matrix, features,  maxRank=1500, chunk.size=1000, n
   #Parallelize?
   if (ncores>1) {
     #plan(future::multisession(workers=ncores))
-    clust <- makeCluster(ncores)
-    meta.list <- parallel::parLapply(cl = clust,
+    meta.list <- parallel::mclapply(mc.cores = ncores,
       X = split.data,
       FUN = function(x) {
 
