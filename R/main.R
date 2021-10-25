@@ -59,11 +59,11 @@ AddModuleScore_UCell <- function(obj, features, maxRank=1500, chunk.size=1000, n
   #Else, calculate new ranks to score signatures (optionally storing ranks, takes up memory but become very fast to evaluate further signatures)
   if (!is.null(precomputedRanks)) {
     meta.list <- rankings2Uscore(precomputedRanks, features=features, chunk.size=chunk.size, w_neg=w_neg,
-                                 ncores=ncores, force.gc=force.gc, name=name)
+                                 ncores=ncores, force.gc=force.gc, name=name, seed = seed)
 
   } else {
     meta.list <- calculate_Uscore(Seurat::GetAssayData(obj, slot, assay=assay), features=features, maxRank=maxRank, chunk.size=chunk.size, w_neg=w_neg,
-                                  ncores=ncores, ties.method=ties.method, force.gc=force.gc, storeRanks=storeRanks, name=name)
+                                  ncores=ncores, ties.method=ties.method, force.gc=force.gc, storeRanks=storeRanks, name=name, seed = seed)
     
     #store ranks matrix?
     if (storeRanks==T){
@@ -124,10 +124,10 @@ ScoreSignatures_UCell <- function(matrix=NULL, features, precalc.ranks=NULL, max
   
   if (!is.null(precalc.ranks)) {
      meta.list <- rankings2Uscore(precalc.ranks, features=features, chunk.size=chunk.size, w_neg=w_neg,
-                                  ncores=ncores, force.gc=force.gc)
+                                  ncores=ncores, force.gc=force.gc, seed = seed)
   } else {
      meta.list <- calculate_Uscore(matrix, features=features, maxRank=maxRank, chunk.size=chunk.size, w_neg=w_neg,
-                                   ties.method=ties.method, ncores=ncores, force.gc=force.gc)
+                                   ties.method=ties.method, ncores=ncores, force.gc=force.gc, seed = seed)
   }
   meta.merge <- lapply(meta.list,function(x) rbind(x[["cells_AUC"]]))
   meta.merge <- Reduce(rbind, meta.merge)
@@ -175,7 +175,7 @@ StoreRankings_UCell <- function(matrix, maxRank=1500, chunk.size=1000, ncores=1,
   
   features <- rownames(matrix)[1]  #dummy signature
   meta.list <- calculate_Uscore(matrix, features=features, maxRank=maxRank, chunk.size=chunk.size,
-                                ncores=ncores, ties.method=ties.method, storeRanks=T, force.gc=force.gc)
+                                ncores=ncores, ties.method=ties.method, storeRanks=T, force.gc=force.gc, seed = seed)
   
   ranks.all <- lapply(meta.list,function(x) rbind(x[["cells_rankings"]]))
   ranks.all <- Reduce(cbind, ranks.all)

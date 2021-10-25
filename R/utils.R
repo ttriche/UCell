@@ -112,7 +112,7 @@ split_data.matrix <- function(matrix, chunk.size=1000) {
 #Get signature scores from precomputed rank matrix
 #' @import data.table
 rankings2Uscore <- function(ranks_matrix, features, chunk.size=1000, w_neg=1,
-                            ncores=1, force.gc=FALSE, name="_UCell") {
+                            ncores=1, force.gc=FALSE, name="_UCell", seed = 1234) {
 
   #Check if all genes in signatures are present in the stored signatures
   ranks_matrix <- check_genes(ranks_matrix, features)
@@ -122,9 +122,11 @@ rankings2Uscore <- function(ranks_matrix, features, chunk.size=1000, w_neg=1,
   rm(ranks_matrix)
 
   if (ncores>1) {
-    plan(future::multisession(workers=ncores))
+    clust <- makeCluster(ncores)
+#    plan(future::multisession(workers=ncores))
+    
 
-    meta.list <- future_lapply(
+    meta.list <- parallel::parLapply(cl = clust,
       X = split.data,
       FUN = function(x) {
 
@@ -141,9 +143,8 @@ rankings2Uscore <- function(ranks_matrix, features, chunk.size=1000, w_neg=1,
         }
         return(list(cells_AUC=cells_AUC))
       },
-      future.seed = future_param_seed
+      future.seed = seed
     )
-    plan(strategy = "sequential")
 
   } else {
 
@@ -171,7 +172,7 @@ rankings2Uscore <- function(ranks_matrix, features, chunk.size=1000, w_neg=1,
 
 #Calculate rankings and scores for query data and given signature set
 calculate_Uscore <- function(matrix, features,  maxRank=1500, chunk.size=1000, ncores=1, w_neg=1,
-                             ties.method="average", storeRanks=FALSE, force.gc=FALSE, name="_UCell") {
+                             ties.method="average", storeRanks=FALSE, force.gc=FALSE, name="_UCell",seed = 1234) {
 
   #Make sure we have a sparse matrix
   require(Matrix)
@@ -186,9 +187,9 @@ calculate_Uscore <- function(matrix, features,  maxRank=1500, chunk.size=1000, n
 
   #Parallelize?
   if (ncores>1) {
-    plan(future::multisession(workers=ncores))
-
-    meta.list <- future_lapply(
+    #plan(future::multisession(workers=ncores))
+    clust <- makeCluster(ncores)
+    meta.list <- parallel::parLapply(cl = clust,
       X = split.data,
       FUN = function(x) {
 
@@ -218,9 +219,8 @@ calculate_Uscore <- function(matrix, features,  maxRank=1500, chunk.size=1000, n
           return(list(cells_AUC=cells_AUC))
         }
       },
-      future.seed = future_param_seed
+      future.seed = seed
     )
-    plan(strategy = "sequential")
 
   } else {
     meta.list <- lapply(
