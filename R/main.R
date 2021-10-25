@@ -45,7 +45,7 @@ AddModuleScore_UCell <- function(obj, features, maxRank=1500, chunk.size=1000, n
   if (ncores>1) {
     require(future.apply)
     future_param_seed <<- seed
-    future_param_ncores <<- ncores
+#    future_param_ncores <<- ncores
   }
   
   features <- check_signature_names(features)
@@ -118,7 +118,7 @@ ScoreSignatures_UCell <- function(matrix=NULL, features, precalc.ranks=NULL, max
   if (ncores>1) {
     require(future.apply)
     future_param_seed <<- seed
-    future_param_ncores <<- ncores
+    #future_param_ncores <<- ncores
   }
   features <- check_signature_names(features)
   
@@ -170,7 +170,7 @@ StoreRankings_UCell <- function(matrix, maxRank=1500, chunk.size=1000, ncores=1,
   if (ncores>1) {
     require(future.apply)
     future_param_seed <<- seed
-    future_param_ncores <<- ncores
+    #future_param_ncores <<- ncores
   }
   
   features <- rownames(matrix)[1]  #dummy signature

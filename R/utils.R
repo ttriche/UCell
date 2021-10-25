@@ -122,7 +122,7 @@ rankings2Uscore <- function(ranks_matrix, features, chunk.size=1000, w_neg=1,
   rm(ranks_matrix)
 
   if (ncores>1) {
-    plan(future::multisession(workers=future_param_ncores))
+    plan(future::multisession(workers=ncores))
 
     meta.list <- future_lapply(
       X = split.data,
@@ -186,7 +186,7 @@ calculate_Uscore <- function(matrix, features,  maxRank=1500, chunk.size=1000, n
 
   #Parallelize?
   if (ncores>1) {
-    plan(future::multisession(workers=future_param_ncores))
+    plan(future::multisession(workers=ncores))
 
     meta.list <- future_lapply(
       X = split.data,
